@@ -1,7 +1,10 @@
 //! Error declaration.
+use std::collections::HashMap;
+
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
 use derive_more::Display;
+use serde_json::{Value, json};
 
 #[derive(Display, Debug)]
 pub enum Error {
@@ -58,17 +61,21 @@ impl From<validator::ValidationErrors> for Error {
 impl ResponseError for Error {
     fn error_response(&self) -> HttpResponse {
         HttpResponse::build(StatusCode::BAD_REQUEST).body(match self {
-            Self::Validate(e) => format!(
-                "Validation errors in fields:\n{}",
-                e.field_errors()
+            Self::Validate(e) => {
+                let a: HashMap<&'static str, Vec<Value>> = e.field_errors()
                     .iter()
-                    .map(|(field, err)| {
-                        let error = err.first().map(|err| format!("{}", err.code));
-                        format!("\t{}: {}", field, error.unwrap_or_default())
-                    })
-                    .collect::<Vec<_>>()
-                    .join("\n")
-            ),
+                    .map(|(&field, &err)| {
+                        let er: Vec<Value> = err.iter().map(|e| {
+                            json!({
+                                "code": e.code.clone().into_owned(),
+                                "message": e.message.clone().unwrap_or_default().into_owned()
+                            })
+                        }).collect();
+                        (field, er)
+                    }).collect();
+                
+                serde_json::to_string(&a).unwrap_or("ERROR".to_owned())
+            }
             _ => format!("{}", *self),
         })
     }
