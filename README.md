@@ -1,4 +1,4 @@
-# actix-web-validator [![Latest Version]][crates.io] [![Documentation]][docs-rs] [![Coverage]][coveralls] [![Build Status]][travis]
+# actix-web-4-validator [![Latest Version]][crates.io] [![Documentation]][docs-rs] [![Coverage]][coveralls] [![Build Status]][travis]
 
 [Latest Version]: https://img.shields.io/crates/v/actix-web-validator
 [Documentation]: https://docs.rs/actix-web-validator/badge.svg
@@ -11,6 +11,7 @@
 
 
 This crate is a Rust library for providing validation mechanism to actix-web with Validator crate
+It is made to work for actix-web 4. I did fork it because actix-web 4 was in beta phase forking
 
 
 Installation
@@ -21,7 +22,7 @@ This crate works with Cargo and can be found on
 
 ```toml
 [dependencies]
-actix-web-validator = "2.1.1"
+actix-web-4-validator = "2.1.1"
 validator = { version = "0.12", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 ```
@@ -42,7 +43,7 @@ serde = { version = "1", features = ["derive"] }
 ```rust
 use actix_web::{web, App};
 use serde::Deserialize;
-use actix_web_validator::Query;
+use actix_web_4_validator::Query;
 use validator::Validate;
 
 #[derive(Debug, Deserialize)]
