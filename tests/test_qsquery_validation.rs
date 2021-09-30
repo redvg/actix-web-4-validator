@@ -1,5 +1,5 @@
 use actix_web::{error, http::StatusCode, test, test::call_service, web, App, HttpResponse};
-use actix_web_validator::{Error, QsQuery};
+use actix_web_4_validator::{Error, QsQuery};
 use serde::Deserialize;
 use validator::Validate;
 
@@ -34,7 +34,7 @@ async fn test_custom_qsquery_validation_error() {
     let mut app = test::init_service(
         App::new()
             .app_data(
-                actix_web_validator::QsQueryConfig::default().error_handler(|err, _req| {
+                actix_web_4_validator::QsQueryConfig::default().error_handler(|err, _req| {
                     assert!(matches!(err, Error::Validate(_)));
                     error::InternalError::from_response(err, HttpResponse::Conflict().finish())
                         .into()

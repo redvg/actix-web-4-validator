@@ -1,4 +1,4 @@
-use actix_web_validator::{error::DeserializeErrors, Error};
+use actix_web_4_validator::{error::DeserializeErrors, Error};
 use serde::Deserialize;
 
 #[derive(Deserialize)]

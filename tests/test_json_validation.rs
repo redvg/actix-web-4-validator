@@ -1,7 +1,7 @@
 use actix_web::{
     error, http::StatusCode, test, test::call_service, web, App, FromRequest, HttpResponse,
 };
-use actix_web_validator::{Json, JsonConfig};
+use actix_web_4_validator::{Json, JsonConfig};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 

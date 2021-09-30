@@ -1,7 +1,7 @@
 use std::fmt;
 
 use actix_web::{error, http::StatusCode, test, test::call_service, web, App, HttpResponse};
-use actix_web_validator::Path;
+use actix_web_4_validator::Path;
 use serde::Deserialize;
 use validator::Validate;
 
@@ -42,7 +42,7 @@ async fn test_custom_path_validation_error() {
     let mut app = test::init_service(
         App::new()
             .app_data(
-                actix_web_validator::PathConfig::default().error_handler(|err, _req| {
+                actix_web_4_validator::PathConfig::default().error_handler(|err, _req| {
                     error::InternalError::from_response(err, HttpResponse::Conflict().finish())
                         .into()
                 }),

@@ -133,28 +133,35 @@ where
             .map(|c| (c.limit, c.ehandler.clone(), c.content_type.clone()))
             .unwrap_or((32768, None, None));
 
-        JsonBody::new(req, payload, ctype)
+        // let zzzz = ctype.unwrap();
+
+        if ctype.is_some() {
+            let a = &*ctype.unwrap();
+            JsonBody::new(req, payload, Some(a))
             .limit(limit)
-            .map(|res: Result<T, _>| match res {
-                Ok(data) => data.validate().map(|_| Json(data)).map_err(Error::from),
-                Err(e) => Err(Error::from(e)),
-            })
-            .map(move |res| match res {
-                Ok(data) => Ok(data),
-                Err(e) => {
-                    log::debug!(
-                        "Failed to deserialize Json from payload. \
-                         Request path: {}",
-                        req2.path()
-                    );
-                    if let Some(err) = err {
-                        Err((*err)(e, &req2))
-                    } else {
-                        Err(e.into())
-                    }
+        } else {
+            JsonBody::new(req, payload, None)
+            .limit(limit)
+        }.map(|res: Result<T, _>| match res {
+            Ok(data) => data.validate().map(|_| Json(data)).map_err(Error::from),
+            Err(e) => Err(Error::from(e)),
+        })
+        .map(move |res| match res {
+            Ok(data) => Ok(data),
+            Err(e) => {
+                log::debug!(
+                    "Failed to deserialize Json from payload. \
+                     Request path: {}",
+                    req2.path()
+                );
+                if let Some(err) = err {
+                    Err((*err)(e, &req2))
+                } else {
+                    Err(e.into())
                 }
-            })
-            .boxed_local()
+            }
+        })
+        .boxed_local()
     }
 }
 
