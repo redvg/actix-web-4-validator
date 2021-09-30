@@ -1,7 +1,6 @@
-# actix-web-4-validator [![Latest Version]][crates.io] [![Documentation]][docs-rs] [![Coverage]][coveralls] [![Build Status]][travis]
+# actix-web-4-validator [![Latest Version]][crates.io] 
 
 [Latest Version]: https://img.shields.io/crates/v/actix-web-4-validator
-[docs-rs]: https://docs.rs/actix-web-4-validator/
 [crates.io]: https://crates.io/crates/actix-web-4-validator
 
 This crate is a Rust library for providing validation mechanism to actix-web with Validator crate
