@@ -1,14 +1,8 @@
 # actix-web-4-validator [![Latest Version]][crates.io] [![Documentation]][docs-rs] [![Coverage]][coveralls] [![Build Status]][travis]
 
-[Latest Version]: https://img.shields.io/crates/v/actix-web-validator
-[Documentation]: https://docs.rs/actix-web-validator/badge.svg
-[docs-rs]: https://docs.rs/actix-web-validator/
-[crates.io]: https://crates.io/crates/actix-web-validator
-[Coverage]: https://coveralls.io/repos/github/rambler-digital-solutions/actix-web-validator/badge.svg?branch=master
-[coveralls]: https://coveralls.io/github/rambler-digital-solutions/actix-web-validator?branch=master
-[Build Status]: https://travis-ci.org/rambler-digital-solutions/actix-web-validator.svg?branch=master
-[travis]: https://travis-ci.org/rambler-digital-solutions/actix-web-validator
-
+[Latest Version]: https://img.shields.io/crates/v/actix-web-4-validator
+[docs-rs]: https://docs.rs/actix-web-4-validator/
+[crates.io]: https://crates.io/crates/actix-web-4-validator
 
 This crate is a Rust library for providing validation mechanism to actix-web with Validator crate
 It is made to work for actix-web 4. I did fork it because actix-web 4 was in beta phase forking
