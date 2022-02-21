@@ -1,10 +1,7 @@
 //! Error declaration.
-use std::collections::HashMap;
-
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
 use derive_more::Display;
-use serde_json::{Value, json};
 
 #[derive(Display, Debug)]
 pub enum Error {
@@ -14,6 +11,8 @@ pub enum Error {
     Deserialize(DeserializeErrors),
     #[display(fmt = "Payload error: {}", _0)]
     JsonPayloadError(actix_web::error::JsonPayloadError),
+    #[display(fmt = "Url encoded error: {}", _0)]
+    UrlEncodedError(actix_web::error::UrlencodedError),
     #[display(fmt = "Query error: {}", _0)]
     QsError(serde_qs::Error),
 }
@@ -58,24 +57,26 @@ impl From<validator::ValidationErrors> for Error {
     }
 }
 
+impl From<actix_web::error::UrlencodedError> for Error {
+    fn from(error: actix_web::error::UrlencodedError) -> Self {
+        Error::UrlEncodedError(error)
+    }
+}
+
 impl ResponseError for Error {
     fn error_response(&self) -> HttpResponse {
         HttpResponse::build(StatusCode::BAD_REQUEST).body(match self {
-            Self::Validate(e) => {
-                let a: HashMap<&'static str, Vec<Value>> = e.field_errors()
+            Self::Validate(e) => format!(
+                "Validation errors in fields:\n{}",
+                e.field_errors()
                     .iter()
-                    .map(|(&field, &err)| {
-                        let er: Vec<Value> = err.iter().map(|e| {
-                            json!({
-                                "code": e.code.clone().into_owned(),
-                                "message": e.message.clone().unwrap_or_default().into_owned()
-                            })
-                        }).collect();
-                        (field, er)
-                    }).collect();
-                
-                serde_json::to_string(&a).unwrap_or("ERROR".to_owned())
-            }
+                    .map(|(field, err)| {
+                        let error = err.first().map(|err| format!("{}", err.code));
+                        format!("\t{}: {}", field, error.unwrap_or_default())
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            ),
             _ => format!("{}", *self),
         })
     }

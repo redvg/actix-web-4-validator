@@ -123,26 +123,22 @@ where
 {
     type Error = actix_web::Error;
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
-    type Config = JsonConfig;
 
     #[inline]
     fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
         let req2 = req.clone();
         let (limit, err, ctype) = req
-            .app_data::<Self::Config>()
+            .app_data::<JsonConfig>()
             .map(|c| (c.limit, c.ehandler.clone(), c.content_type.clone()))
             .unwrap_or((32768, None, None));
 
-        // let zzzz = ctype.unwrap();
-
         if ctype.is_some() {
             let a = &*ctype.unwrap();
-            JsonBody::new(req, payload, Some(a))
-            .limit(limit)
+            JsonBody::new(req, payload, Some(a), true).limit(limit)
         } else {
-            JsonBody::new(req, payload, None)
-            .limit(limit)
-        }.map(|res: Result<T, _>| match res {
+            JsonBody::new(req, payload, None, true).limit(limit)
+        }
+        .map(|res: Result<T, _>| match res {
             Ok(data) => data.validate().map(|_| Json(data)).map_err(Error::from),
             Err(e) => Err(Error::from(e)),
         })
@@ -151,7 +147,7 @@ where
             Err(e) => {
                 log::debug!(
                     "Failed to deserialize Json from payload. \
-                     Request path: {}",
+                         Request path: {}",
                     req2.path()
                 );
                 if let Some(err) = err {
@@ -206,7 +202,7 @@ where
 #[derive(Clone)]
 pub struct JsonConfig {
     limit: usize,
-    ehandler: Option<Arc<dyn Fn(Error, &HttpRequest) -> actix_web::Error + Send + Sync>>,
+    ehandler: Option<Arc<(dyn Fn(Error, &HttpRequest) -> actix_web::Error + Send + Sync)>>,
     content_type: Option<Arc<dyn Fn(mime::Mime) -> bool + Send + Sync>>,
 }
 

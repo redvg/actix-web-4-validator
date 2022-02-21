@@ -201,7 +201,6 @@ where
 {
     type Error = actix_web::Error;
     type Future = Ready<Result<Self, Self::Error>>;
-    type Config = QsQueryConfig;
 
     /// Builds Query struct from request and provides validation mechanism
     #[inline]

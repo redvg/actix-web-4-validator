@@ -199,7 +199,6 @@ where
 {
     type Error = actix_web::Error;
     type Future = Ready<Result<Self, Self::Error>>;
-    type Config = QueryConfig;
 
     /// Builds Query struct from request and provides validation mechanism
     #[inline]
@@ -208,7 +207,7 @@ where
         _: &mut actix_web::dev::Payload,
     ) -> Self::Future {
         let error_handler = req
-            .app_data::<Self::Config>()
+            .app_data::<QueryConfig>()
             .map(|c| c.ehandler.clone())
             .unwrap_or(None);
 

@@ -49,14 +49,16 @@ async fn test_custom_query_validation_error() {
     assert_eq!(resp.status(), StatusCode::CONFLICT);
 }
 
+async fn test_deref_validated_query_test(query: Query<QueryParams>) -> HttpResponse {
+    assert_eq!(query.id, 28);
+    HttpResponse::Ok().finish()
+}
+
 #[actix_rt::test]
 async fn test_deref_validated_query() {
-    let mut app = test::init_service(App::new().service(web::resource("/test").to(
-        |query: Query<QueryParams>| {
-            assert_eq!(query.id, 28);
-            HttpResponse::Ok().finish()
-        },
-    )))
+    let mut app = test::init_service(
+        App::new().service(web::resource("/test").to(test_deref_validated_query_test)),
+    )
     .await;
 
     let req = test::TestRequest::with_uri("/test?id=28").to_request();

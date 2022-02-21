@@ -56,14 +56,16 @@ async fn test_custom_path_validation_error() {
     assert_eq!(resp.status(), StatusCode::CONFLICT);
 }
 
+async fn test_deref_validated_path_test(query: Path<PathParams>) -> HttpResponse {
+    assert_eq!(query.id, 28);
+    HttpResponse::Ok().finish()
+}
+
 #[actix_rt::test]
 async fn test_deref_validated_path() {
-    let mut app = test::init_service(App::new().service(web::resource("/test/{id}/").to(
-        |query: Path<PathParams>| {
-            assert_eq!(query.id, 28);
-            HttpResponse::Ok().finish()
-        },
-    )))
+    let mut app = test::init_service(
+        App::new().service(web::resource("/test/{id}/").to(test_deref_validated_path_test)),
+    )
     .await;
 
     let req = test::TestRequest::with_uri("/test/28/").to_request();

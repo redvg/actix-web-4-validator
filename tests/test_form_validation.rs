@@ -1,23 +1,29 @@
-use actix_web::{error, http::StatusCode, test, test::call_service, web, App, HttpResponse};
-use actix_web_4_validator::{Json, JsonConfig};
+use actix_web::{
+    http::StatusCode,
+    test,
+    test::call_service,
+    web::{self},
+    App, HttpResponse,
+};
+use actix_web_4_validator::{Form, FormConfig};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Debug, PartialEq, Validate, Serialize, Deserialize)]
-struct JsonPayload {
+struct FormData {
     #[validate(url)]
     page_url: String,
     #[validate(range(min = 18, max = 28))]
     age: u8,
 }
 
-async fn test_handler(query: Json<JsonPayload>) -> HttpResponse {
+async fn test_handler(query: Form<FormData>) -> HttpResponse {
     dbg!(&query.into_inner());
     HttpResponse::Ok().finish()
 }
 
 #[actix_rt::test]
-async fn test_json_validation() {
+async fn test_form_validation() {
     let mut app = test::init_service(
         App::new().service(web::resource("/test").route(web::post().to(test_handler))),
     )
@@ -26,7 +32,7 @@ async fn test_json_validation() {
     // Test 200 status
     let req = test::TestRequest::post()
         .uri("/test")
-        .set_json(&JsonPayload {
+        .set_form(&FormData {
             page_url: "https://my_page.com".to_owned(),
             age: 24,
         })
@@ -37,7 +43,7 @@ async fn test_json_validation() {
     // Test 400 status
     let req = test::TestRequest::post()
         .uri("/test")
-        .set_json(&JsonPayload {
+        .set_form(&FormData {
             page_url: "invalid_url".to_owned(),
             age: 24,
         })
@@ -47,21 +53,11 @@ async fn test_json_validation() {
 }
 
 #[actix_rt::test]
-async fn test_custom_json_validation_error() {
-    let json_cfg = web::JsonConfig::default()
-        // limit request payload size
-        .limit(4096)
-        // only accept text/plain content type
-        .content_type(|mime| mime == mime::TEXT_PLAIN)
-        // use custom error handler
-        .error_handler(|err, _| {
-            error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
-        });
-
+async fn test_custom_form_validation_error() {
     let mut app = test::init_service(
         App::new().service(
             web::resource("/test")
-                .app_data(json_cfg)
+                .app_data(FormConfig::default().limit(4096))
                 .route(web::post().to(test_handler)),
         ),
     )
@@ -69,7 +65,7 @@ async fn test_custom_json_validation_error() {
 
     let req = test::TestRequest::post()
         .uri("/test")
-        .set_json(&JsonPayload {
+        .set_form(&FormData {
             page_url: "invalid".to_owned(),
             age: 24,
         })
@@ -79,9 +75,9 @@ async fn test_custom_json_validation_error() {
     assert_eq!(resp.status(), StatusCode::CONFLICT);
 }
 
-async fn test_validated_json_asref_deref_test(payload: Json<JsonPayload>) -> HttpResponse {
+async fn test_validated_form_asref_deref_test(payload: Form<FormData>) -> HttpResponse {
     assert_eq!(payload.age, 24);
-    let reference = JsonPayload {
+    let reference = FormData {
         page_url: "https://my_page.com".to_owned(),
         age: 24,
     };
@@ -90,15 +86,15 @@ async fn test_validated_json_asref_deref_test(payload: Json<JsonPayload>) -> Htt
 }
 
 #[actix_rt::test]
-async fn test_validated_json_asref_deref() {
+async fn test_validated_form_asref_deref() {
     let mut app = test::init_service(
-        App::new().service(web::resource("/test").to(test_validated_json_asref_deref_test)),
+        App::new().service(web::resource("/test").to(test_validated_form_asref_deref_test)),
     )
     .await;
 
     let req = test::TestRequest::post()
         .uri("/test")
-        .set_json(&JsonPayload {
+        .set_form(&FormData {
             page_url: "https://my_page.com".to_owned(),
             age: 24,
         })
@@ -106,7 +102,7 @@ async fn test_validated_json_asref_deref() {
     call_service(&mut app, req).await;
 }
 
-async fn test_validated_json_into_inner_test(payload: Json<JsonPayload>) -> HttpResponse {
+async fn test_validated_form_into_inner_test(payload: Form<FormData>) -> HttpResponse {
     let payload = payload.into_inner();
     assert_eq!(payload.age, 24);
     assert_eq!(payload.page_url, "https://my_page.com");
@@ -114,15 +110,15 @@ async fn test_validated_json_into_inner_test(payload: Json<JsonPayload>) -> Http
 }
 
 #[actix_rt::test]
-async fn test_validated_json_into_inner() {
+async fn test_validated_form_into_inner() {
     let mut app = test::init_service(
-        App::new().service(web::resource("/test").to(test_validated_json_into_inner_test)),
+        App::new().service(web::resource("/test").to(test_validated_form_into_inner_test)),
     )
     .await;
 
     let req = test::TestRequest::post()
         .uri("/test")
-        .set_json(&JsonPayload {
+        .set_form(&FormData {
             page_url: "https://my_page.com".to_owned(),
             age: 24,
         })
@@ -131,17 +127,17 @@ async fn test_validated_json_into_inner() {
 }
 
 #[actix_rt::test]
-async fn test_validated_json_limit() {
+async fn test_validated_form_limit() {
     let mut app = test::init_service(
         App::new()
-            .app_data(JsonConfig::default().limit(1))
+            .app_data(FormConfig::default().limit(1))
             .service(web::resource("/test").route(web::post().to(test_handler))),
     )
     .await;
 
     let req = test::TestRequest::post()
         .uri("/test")
-        .set_json(&JsonPayload {
+        .set_form(&FormData {
             page_url: "https://my_page.com".to_owned(),
             age: 24,
         })
