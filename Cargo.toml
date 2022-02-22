@@ -25,7 +25,7 @@ documentation = "https://docs.rs/actix-web-4-validator/"
 [dependencies]
 actix-web = { version = "4.0.0-rc.3", default-features = false }
 # actix-http = { version = "2" }
-derive_more = "0.99"
+# derive_more = "0.99"
 validator = { version = "0.14" }
 serde = "1"
 serde_urlencoded = "0.7"

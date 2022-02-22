@@ -1,30 +1,105 @@
 //! Error declaration.
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use derive_more::Display;
+use serde_json::json;
 
-#[derive(Display, Debug)]
+#[derive(Debug)]
 pub enum Error {
-    #[display(fmt = "Validation error: {}", _0)]
     Validate(validator::ValidationErrors),
-    #[display(fmt = "{}", _0)]
     Deserialize(DeserializeErrors),
-    #[display(fmt = "Payload error: {}", _0)]
     JsonPayloadError(actix_web::error::JsonPayloadError),
-    #[display(fmt = "Url encoded error: {}", _0)]
     UrlEncodedError(actix_web::error::UrlencodedError),
-    #[display(fmt = "Query error: {}", _0)]
     QsError(serde_qs::Error),
 }
 
-#[derive(Display, Debug)]
+#[derive(Debug)]
 pub enum DeserializeErrors {
-    #[display(fmt = "Query deserialize error: {}", _0)]
     DeserializeQuery(serde_urlencoded::de::Error),
-    #[display(fmt = "Json deserialize error: {}", _0)]
     DeserializeJson(serde_json::error::Error),
-    #[display(fmt = "Path deserialize error: {}", _0)]
     DeserializePath(serde::de::value::Error),
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (status, error) = match self {
+            Self::Validate(e) => {
+                let mut fields: Vec<serde_json::Value> = vec![];
+
+                for (field, err) in e.field_errors() {
+                    let errors: Vec<serde_json::Value> = err
+                        .iter()
+                        .map(|e| {
+                            json!({
+                                "code": e.code,
+                                "msg": e.message
+                            })
+                        })
+                        .collect();
+
+                    fields.push(json!({
+                        "field": field,
+                        "errors": errors
+                    }));
+                }
+
+                return write! {f,"{}",
+                    json!({
+                        "error": {
+                            "code": StatusCode::BAD_REQUEST.as_u16(),
+                            "status": "VALIDATION_ERROR",
+                            "fields": fields
+                        }
+                    })
+                };
+            }
+
+            Self::Deserialize(e) => {
+                return write! {f,"{}",
+                    json!({
+                        "error": {
+                            "code": StatusCode::BAD_REQUEST.as_u16(),
+                            "status": "DESERIALIZE_ERROR",
+                            "error": e.to_string()
+                        }
+                    })
+                };
+            }
+
+            Self::JsonPayloadError(e) => ("PAYLOAD_ERROR", e.to_string()),
+            Self::UrlEncodedError(e) => ("URL_ENCODED_ERROR", e.to_string()),
+            Self::QsError(e) => ("QUERY_ERROR", e.to_string()),
+        };
+
+        write! {f,"{}",
+            json!({
+                "error": {
+                    "code": StatusCode::BAD_REQUEST.as_u16(),
+                    "status": status,
+                    "msg": error
+                }
+            })
+        }
+    }
+}
+
+impl std::fmt::Display for DeserializeErrors {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (status, error) = match self {
+            Self::DeserializeQuery(e) => ("QUERY_DESERIALIZE_ERROR", e.to_string()),
+            Self::DeserializeJson(e) => ("JSON_DESERIALIZE_ERROR", e.to_string()),
+            Self::DeserializePath(e) => ("PATH_DESERIALIZE_ERROR", e.to_string()),
+        };
+
+        write! {f,"{}",
+            json!({
+                "error": {
+                    "code": StatusCode::BAD_REQUEST.as_u16(),
+                    "status": status,
+                    "msg": error
+                }
+            })
+        }
+    }
 }
 
 impl From<serde_json::error::Error> for Error {
@@ -65,19 +140,8 @@ impl From<actix_web::error::UrlencodedError> for Error {
 
 impl ResponseError for Error {
     fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(StatusCode::BAD_REQUEST).body(match self {
-            Self::Validate(e) => format!(
-                "Validation errors in fields:\n{}",
-                e.field_errors()
-                    .iter()
-                    .map(|(field, err)| {
-                        let error = err.first().map(|err| format!("{}", err.code));
-                        format!("\t{}: {}", field, error.unwrap_or_default())
-                    })
-                    .collect::<Vec<_>>()
-                    .join("\n")
-            ),
-            _ => format!("{}", *self),
-        })
+        HttpResponse::build(StatusCode::BAD_REQUEST)
+            .content_type("application/json")
+            .body(self.to_string())
     }
 }
