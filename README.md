@@ -1,11 +1,12 @@
-# actix-web-4-validator [![Latest Version]][crates.io] 
+# actix-web-4-validator [![Latest Version]][crates.io]
 
-[Latest Version]: https://img.shields.io/crates/v/actix-web-4-validator
 [crates.io]: https://crates.io/crates/actix-web-4-validator
 
-This crate is a Rust library for providing validation mechanism to actix-web with Validator crate
-It is made to work for actix-web 4. I did fork it because actix-web 4 was in beta phase forking
+This crate is a Rust library for providing validation mechanism to actix-web with Validator crate.
 
+It is fork of [https://github.com/rambler-digital-solutions/actix-web-validator](https://https://github.com/rambler-digital-solutions/actix-web-validator)
+
+I did fork it because that crate was made to work for actix_web 3 and I needed it to work for actix_web 4
 
 Installation
 ============
@@ -15,21 +16,25 @@ This crate works with Cargo and can be found on
 
 ```toml
 [dependencies]
-actix-web-4-validator = "2.1.1"
-validator = { version = "0.12", features = ["derive"] }
+actix-web-4-validator = "3.2.0"
+validator = { version = "0.14", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 ```
 
 ## Supported extractors:
+
 * `actix_web::web::Json`
 * `actix_web::web::Query`
 * `actix_web::web::Path`
-* `serde_qs::actix::QsQuery` 
+* `actix_web::web::Form`
+* `serde_qs::actix::QsQuery`
 
 ### Supported `actix_web` versions:
+
 * For actix-web-validator `0.*` supported version of actix-web is `1.*`
 * For actix-web-validator `1.* ` supported version of actix-web is `2.*`
 * For actix-web-validator `2.* ` supported version of actix-web is `3.*`
+* For actix-web-validator `3.* ` supported version of actix-web is `4.*`
 
 ### Example:
 
